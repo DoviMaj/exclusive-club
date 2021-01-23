@@ -7,7 +7,8 @@ const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const mongoose = require("mongoose");
-const bycrypt = require("bcryptjs");
+const bcrypt = require("bcryptjs");
+const { body, validationResult } = require("express-validator");
 const Schema = mongoose.Schema;
 require("dotenv").config();
 
@@ -30,33 +31,32 @@ const User = mongoose.model(
 const Message = mongoose.model(
   "Message",
   new Schema({
-    title: { required: true, type: String },
     date: { default: Date.now(), type: Date },
     text: { required: true, type: String },
     user: { required: true, type: Object },
   })
 );
 
-const app = express();
-app.use(express.urlencoded({ extended: false }));
-app.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
-app.use(passport.initialize());
-app.use(passport.session());
-
 // PassportJS middleware Local Strategy
 passport.use(
   new LocalStrategy((username, password, done) => {
     User.findOne({ username: username }, (err, user) => {
-      console.log("hi");
+      console.log(user);
       if (err) {
         return done(err);
       }
       if (!user) {
         return done(null, false, { msg: "Incorrect username" });
       }
-      if (user.password !== password) {
-        return done(null, false, { msg: "Incorrect password" });
-      }
+      bcrypt.compare(password, user.password, (err, res) => {
+        if (res) {
+          // passwords match! log user in
+          return done(null, user);
+        } else {
+          // passwords do not match!
+          return done(null, false, { msg: "Incorrect password" });
+        }
+      });
       return done(null, user);
     });
   })
@@ -73,9 +73,11 @@ passport.deserializeUser(function (id, done) {
   });
 });
 
-// view engine setup
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "pug");
+const app = express();
+app.use(express.urlencoded({ extended: false }));
+app.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Local user var
 app.use(function (req, res, next) {
@@ -83,15 +85,39 @@ app.use(function (req, res, next) {
   next();
 });
 
+// view engine setup
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "pug");
+
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/", (req, res) => {
-  console.log(req.user);
-  res.render("index", { user: req.user });
+app.get("/", async (req, res) => {
+  const messages = await Message.find({});
+  if (!messages) {
+    throw new Error("messages not found");
+  }
+
+  console.log(req.user, messages);
+  res.render("index", { user: req.user, messages: messages });
+});
+
+app.post("/", (req, res, next) => {
+  console.log(app.locals.currentUser);
+  const message = new Message({
+    user: req.user,
+    text: req.body.text,
+  });
+  message.save((err) => {
+    if (err) {
+      return next(err);
+    }
+    console.log(message);
+    res.redirect("/");
+  });
 });
 
 app.get("/log-in", (req, res) => res.render("log-in"));
@@ -99,9 +125,11 @@ app.get("/log-in", (req, res) => res.render("log-in"));
 app.post(
   "/log-in",
   passport.authenticate("local", {
-    successRedirect: "/",
-    failureRedirect: "/",
-  })
+    failureRedirect: "/log-in",
+  }),
+  (req, res) => {
+    res.redirect("/");
+  }
 );
 
 app.get("/log-out", (req, res) => {
@@ -111,25 +139,70 @@ app.get("/log-out", (req, res) => {
 
 app.get("/sign-up", (req, res) => res.render("sign-up"));
 
-app.post("/sign-up", (req, res, next) => {
-  const user = new User({
-    username: req.body.username,
-    password: req.body.password,
-    email: req.body.email,
-  });
-
-  user.save((err) => {
-    if (err) {
-      return next(err);
-    }
-    req.login(user, function (err) {
-      if (err) {
-        return next(err);
+app.post(
+  "/sign-up",
+  body("username", "Empty name")
+    .trim()
+    .escape()
+    .custom(async (username) => {
+      const existingUsername = await User.findOne({ username: username });
+      if (existingUsername) {
+        throw new Error("Email already in use");
       }
-      return res.redirect("/");
+    }),
+  body("email", "Not an Email")
+    .trim()
+    .normalizeEmail()
+    .isEmail()
+    .withMessage("Invalid email")
+    .custom(async (email) => {
+      const existingEmail = await User.findOne({ email: email });
+      if (existingEmail) {
+        throw new Error("Email already in use");
+      }
+    }),
+  body("password").isLength(6).withMessage("Minimum length 6 characters"),
+  body("confirm-password").custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error("Password confirmation does not match password");
+    }
+    // Indicates the success of this synchronous custom validator
+    return true;
+  }),
+  (req, res) => {
+    // Finds the validation errors in this request and wraps them in an object with handy functions
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.render("sign-up", {
+        username: req.body.username,
+        email: req.body.email,
+        errors: errors.array(),
+      });
+      return;
+    }
+
+    const user = new User({
+      username: req.body.username,
+      email: req.body.email,
     });
-  });
-});
+
+    bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
+      if (err) throw new Error(err);
+      user.password = hashedPassword;
+      user.save((err) => {
+        if (err) {
+          return next(err);
+        }
+        req.login(user, function (err) {
+          if (err) {
+            return next(err);
+          }
+          return res.redirect("/");
+        });
+      });
+    });
+  }
+);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
