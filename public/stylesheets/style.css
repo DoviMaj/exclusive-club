@@ -1,8 +1,50 @@
 body {
-  padding: 50px;
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
 a {
-  color: #00B7FF;
+  color: #00b7ff;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  max-width: 300px;
+  margin: 0 auto;
+  gap: 3px;
+}
+
+input {
+  padding: 5px;
+}
+
+nav {
+  background: rgb(1 1 1 / 68%);
+  color: white;
+  font-size: 20px;
+  padding: 10px;
+}
+
+li {
+  list-style: none;
+}
+
+ul {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+}
+
+.content {
+  margin: auto;
+  width: 70%;
+}
+
+.messages {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
