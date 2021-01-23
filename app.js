@@ -7,18 +7,81 @@ const session = require("express-session");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const mongoose = require("mongoose");
+const bycrypt = require("bcryptjs");
 const Schema = mongoose.Schema;
+require("dotenv").config();
 
-const indexRouter = require("./routes/index");
-const loginRouter = require("./routes/login");
-const logoutRouter = require("./routes/logout");
-const registerRouter = require("./routes/register");
+const mongoDB = process.env.MONGO_URI;
+mongoose.connect(mongoDB, { useUnifiedTopology: true, useNewUrlParser: true });
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "mongo connection error"));
+
+const User = mongoose.model(
+  "User",
+  new Schema({
+    username: { required: true, type: String },
+    email: { required: true, type: String },
+    password: { required: true, type: String },
+    role: { default: "basic", type: String },
+    date: { type: Date, default: Date.now() },
+  })
+);
+
+const Message = mongoose.model(
+  "Message",
+  new Schema({
+    title: { required: true, type: String },
+    date: { default: Date.now(), type: Date },
+    text: { required: true, type: String },
+    user: { required: true, type: Object },
+  })
+);
 
 const app = express();
+app.use(express.urlencoded({ extended: false }));
+app.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+// PassportJS middleware Local Strategy
+passport.use(
+  new LocalStrategy((username, password, done) => {
+    User.findOne({ username: username }, (err, user) => {
+      console.log("hi");
+      if (err) {
+        return done(err);
+      }
+      if (!user) {
+        return done(null, false, { msg: "Incorrect username" });
+      }
+      if (user.password !== password) {
+        return done(null, false, { msg: "Incorrect password" });
+      }
+      return done(null, user);
+    });
+  })
+);
+
+//  create a cookie which is stored in the user’s browser
+passport.serializeUser(function (user, done) {
+  done(null, user.id);
+});
+
+passport.deserializeUser(function (id, done) {
+  User.findById(id, function (err, user) {
+    done(err, user);
+  });
+});
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "pug");
+
+// Local user var
+app.use(function (req, res, next) {
+  res.locals.currentUser = req.user;
+  next();
+});
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -26,10 +89,47 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", indexRouter);
-app.use("/login", loginRouter);
-app.use("/logout", logoutRouter);
-app.use("/register", registerRouter);
+app.get("/", (req, res) => {
+  console.log(req.user);
+  res.render("index", { user: req.user });
+});
+
+app.get("/log-in", (req, res) => res.render("log-in"));
+
+app.post(
+  "/log-in",
+  passport.authenticate("local", {
+    successRedirect: "/",
+    failureRedirect: "/",
+  })
+);
+
+app.get("/log-out", (req, res) => {
+  req.logout();
+  res.redirect("/");
+});
+
+app.get("/sign-up", (req, res) => res.render("sign-up"));
+
+app.post("/sign-up", (req, res, next) => {
+  const user = new User({
+    username: req.body.username,
+    password: req.body.password,
+    email: req.body.email,
+  });
+
+  user.save((err) => {
+    if (err) {
+      return next(err);
+    }
+    req.login(user, function (err) {
+      if (err) {
+        return next(err);
+      }
+      return res.redirect("/");
+    });
+  });
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
