@@ -1,7 +1,27 @@
 extends layout
-
 block content
-    if user
-      p Welcome #{user.username}
+  include helper.js.pug
+  div(class='content')
+    if currentUser
+        p Welcome 
+          strong #{currentUser.username}!
+        form(class='form' action="" method='POST' )
+          label(for='text') New Post
+          textarea(name='text' required)
+          button(type='submit') Send
+        if messages
+          div(class='messages')
+            each msg in messages
+              p User: 
+                strong= msg.user.username
+              p Message:
+                em= msg.text
     else
-      p No User
+        if messages
+          div(class='messages')
+            each msg in messages
+              p User: 
+                strong= msg.user.username
+              p Message:
+                em= Hidden  
+                  a(href='/log-in') Log-in to view content 
