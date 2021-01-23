@@ -1,12 +1,18 @@
-h1 Sign-Up
-form(action="/sign-up" method='POST')
-    label(for='username') Name:
-    input(type='text' required name='username')
-    label(for='email') Email:
-    input(type='email' required name='email')
-    label(for='password') Password:
-    input(type='password' required name='password')
-    label(for='confirm-password') Confirm Password:
-    input(type='password' required name='confirm-password')
-    button(type='submit') Submit
-    
+extends layout
+block content
+    include helper.js.pug
+    form(class='form' action="/sign-up" method='POST' )
+        h1 Sign-Up
+        label(for='username') Name:
+        input(type='text' required name='username' value=(undefined===username ? '' : username) )
+        small=errMsg('username')
+        label(for='email') Email:
+        input(type='email' required name='email' autocomplete="username" value=(undefined===email ? '' : email) )
+        small=errMsg('email')
+        label(for='password') Password:
+        input(type='password' required autocomplete="new-password" name='password')
+        small=errMsg('password')
+        label(for='confirm-password') Confirm Password:
+        input(type='password' required autocomplete="new-password" name='confirm-password')
+        small=errMsg('confirm-password')    
+        button(type='submit') Submit
