@@ -2,29 +2,59 @@ body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
   margin: 0;
   padding: 0;
-}
-
-a {
-  color: #00b7ff;
+  background: rgb(1 1 1 / 78%);
+  color: white;
 }
 
 .form {
   display: flex;
   flex-direction: column;
   max-width: 300px;
-  margin: 0 auto;
+  margin: 20px auto;
   gap: 3px;
+}
+
+.new-post {
+  flex-direction: row;
+  align-items: center;
 }
 
 input {
   padding: 5px;
 }
 
+textarea {
+  resize: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+}
+
+button {
+  background-color: #86e4f3;
+  border-radius: 5px;
+  width: fit-content;
+  padding: 10px;
+  margin: 5px auto;
+  height: fit-content;
+  border: none;
+  cursor: pointer;
+}
+
+a {
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 nav {
-  background: rgb(1 1 1 / 68%);
+  background: rgb(1 1 1 / 35%);
   color: white;
   font-size: 20px;
-  padding: 10px;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 20px;
 }
 
 li {
@@ -36,15 +66,28 @@ ul {
   justify-content: space-between;
   gap: 20px;
   align-items: center;
+  padding: 0;
+  margin: 0 30px 0 30px;
 }
 
 .content {
-  margin: auto;
-  width: 70%;
+  margin: 20px auto;
+  width: 40%;
 }
 
 .messages {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: 15px;
+}
+
+.message {
+  background: #009fb7;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.messages > *:nth-child(even) {
+  background: #fed766;
 }
