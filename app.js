@@ -17,25 +17,33 @@ mongoose.connect(mongoDB, { useUnifiedTopology: true, useNewUrlParser: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "mongo connection error"));
 
-const User = mongoose.model(
-  "User",
-  new Schema({
-    username: { required: true, type: String },
-    email: { required: true, type: String },
-    password: { required: true, type: String },
-    role: { default: "basic", type: String },
-    date: { type: Date, default: Date.now() },
-  })
-);
+const UserSchema = new Schema({
+  username: { required: true, type: String },
+  email: { required: true, type: String },
+  password: { required: true, type: String },
+  role: { default: "basic", type: String },
+  date: { type: Date, default: Date.now() },
+});
 
-const Message = mongoose.model(
-  "Message",
-  new Schema({
-    date: { default: Date.now(), type: Date },
-    text: { required: true, type: String },
-    user: { required: true, type: Object },
-  })
-);
+const User = mongoose.model("User", UserSchema);
+
+const MessageSchema = new Schema({
+  date: { default: Date.now(), type: Date },
+  text: { required: true, type: String },
+  user: { required: true, type: Object },
+});
+
+MessageSchema.virtual("date_formated").get(function () {
+  return this.date.toLocaleDateString("en-gb", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minutes: "2-digit",
+  });
+});
+
+const Message = mongoose.model("Message", MessageSchema);
 
 // PassportJS middleware Local Strategy
 passport.use(
@@ -96,7 +104,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", async (req, res) => {
-  const messages = await Message.find({});
+  const messages = await Message.find({}).sort({ date: "desc" });
   if (!messages) {
     throw new Error("messages not found");
   }
