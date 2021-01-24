@@ -1,27 +1,29 @@
 extends layout
 block content
-  include helper.js.pug
   div(class='content')
     if currentUser
-        p Welcome 
-          strong #{currentUser.username}!
-        form(class='form' action="" method='POST' )
-          label(for='text') New Post
-          textarea(name='text' required)
+        h1 Welcome #{currentUser.username}!
+        form(class='form new-post' action="" method='POST' )
+          textarea(name='text' placeholder="What's on your mind?" required)
           button(type='submit') Send
         if messages
           div(class='messages')
             each msg in messages
-              p User: 
-                strong= msg.user.username
-              p Message:
-                em= msg.text
+              div(class='message')
+                p
+                  strong @!{msg.user.username}
+                p 
+                  em= msg.text
+                p 
+                  em= msg.date_formated
     else
         if messages
           div(class='messages')
             each msg in messages
-              p User: 
-                strong= msg.user.username
-              p Message:
-                em= Hidden  
-                  a(href='/log-in') Log-in to view content 
+              div(class='message')
+                p
+                  strong @!{msg.user.username}
+                a(href='/log-in') Log-in or 
+                a(href='/sign-up') Sign-up to view content
+                p 
+                  em= msg.date_formated

@@ -3,11 +3,11 @@ nav
         li
             h1 
                 a(href='/') Exclusive Club
-        div
-            if currentUser
-                li
+        if currentUser
+            li
                     a(href='/log-out') Log-out
-            else
-                li
-                    a(href='/log-in') Log-in
+        else
+            li(class='nav-buttons')
+                a(href='/log-in') Log in
+                a(href='/sign-up') Sign up
             

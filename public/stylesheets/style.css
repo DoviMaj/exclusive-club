@@ -1,5 +1,5 @@
 body {
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  font: 14px "Nunito", sans-serif;
   margin: 0;
   padding: 0;
   background: rgb(1 1 1 / 78%);
@@ -9,7 +9,7 @@ body {
 .form {
   display: flex;
   flex-direction: column;
-  max-width: 300px;
+  max-width: 400px;
   margin: 20px auto;
   gap: 3px;
 }
@@ -20,7 +20,8 @@ body {
 }
 
 input {
-  padding: 5px;
+  padding: 8px;
+  border-radius: 7px;
 }
 
 textarea {
@@ -33,17 +34,34 @@ button {
   background-color: #86e4f3;
   border-radius: 5px;
   width: fit-content;
-  padding: 10px;
-  margin: 5px auto;
+  padding: 14px;
+  margin: 5px 0;
   height: fit-content;
   border: none;
   cursor: pointer;
+  box-shadow: 4px 4px 0px 0px #3c74a5;
+}
+
+button:active {
+  transform: translate(20deg);
+}
+
+button:focus {
+  outline: none;
 }
 
 a {
   color: white;
   text-decoration: none;
   cursor: pointer;
+}
+
+a:hover {
+  color: khaki;
+}
+
+strong {
+  font-size: 20px;
 }
 
 nav {
@@ -89,5 +107,5 @@ ul {
 }
 
 .messages > *:nth-child(even) {
-  background: #fed766;
+  background: #eabd39;
 }
