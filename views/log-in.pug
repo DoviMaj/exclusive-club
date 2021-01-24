@@ -1,12 +1,9 @@
 extends layout
 block content
-    include helper.js.pug
     form(action="/log-in" method='POST' class='form')
         h1 Log In
-        label(for='username') Name:
+        label(for='username') Username:
         input(type='text' required name='username')
-        label(for='email') Email:
-        input(type='email' required name='email')
         label(for='password') Password:
         input(type='password' required  name='password')
         button(type='submit') Submit
