@@ -9,6 +9,7 @@ const LocalStrategy = require("passport-local").Strategy;
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const { body, validationResult } = require("express-validator");
+const fetch = require("node-fetch");
 const Schema = mongoose.Schema;
 require("dotenv").config();
 
@@ -49,7 +50,6 @@ const Message = mongoose.model("Message", MessageSchema);
 passport.use(
   new LocalStrategy((username, password, done) => {
     User.findOne({ username: username }, (err, user) => {
-      console.log(user);
       if (err) {
         return done(err);
       }
@@ -89,7 +89,8 @@ app.use(passport.session());
 
 // Local user var
 app.use(function (req, res, next) {
-  res.locals.currentUser = req.user;
+  app.locals.currentUser = req.user;
+  req.session.currentUser = req.user;
   next();
 });
 
@@ -104,17 +105,16 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", async (req, res) => {
+  console.log(req.session, req.app.locals);
+
   const messages = await Message.find({}).sort({ date: "desc" });
   if (!messages) {
     throw new Error("messages not found");
   }
-
-  console.log(req.user, messages);
   res.render("index", { user: req.user, messages: messages });
 });
 
 app.post("/", (req, res, next) => {
-  console.log(app.locals.currentUser);
   const message = new Message({
     user: req.user,
     text: req.body.text,
@@ -123,7 +123,6 @@ app.post("/", (req, res, next) => {
     if (err) {
       return next(err);
     }
-    console.log(message);
     res.redirect("/");
   });
 });
@@ -211,6 +210,58 @@ app.post(
     });
   }
 );
+
+let currentQuestion = {};
+let wrongAnswer = false;
+app.get("/join", async (req, res, next) => {
+  // fetch random question
+  try {
+    const quest = await fetch(
+      "https://opentdb.com/api.php?amount=1&difficulty=hard&type=multiple"
+    );
+    if (res.status >= 400) {
+      throw new Error("Bad response from server");
+    }
+    const question = await quest.json();
+    currentQuestion = question.results[0];
+
+    // create answers array
+    let answersArr = [...currentQuestion.incorrect_answers];
+    const randomNum = () =>
+      Math.floor(Math.random() * Math.floor(answersArr.length));
+
+    const newRandomNum = randomNum();
+    const randomIndexValue = answersArr[newRandomNum];
+    answersArr[newRandomNum] = currentQuestion.correct_answer;
+    answersArr.push(randomIndexValue);
+
+    // render
+    res.render("join", { question: currentQuestion, answersArr, wrongAnswer });
+  } catch (err) {
+    throw new Error(err);
+  }
+});
+
+app.post("/join", async (req, res, next) => {
+  console.log(req.session, req.app.locals);
+  if (
+    req.body.riddle.toLowerCase() ===
+    currentQuestion.correct_answer.toLowerCase()
+  ) {
+    try {
+      await User.findByIdAndUpdate(req.session.currentUser._id, {
+        role: req.body.role,
+      });
+      wrongAnswer = false;
+      res.redirect("/");
+    } catch (err) {
+      return next(err);
+    }
+  } else {
+    wrongAnswer = true;
+    res.redirect("/join");
+  }
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

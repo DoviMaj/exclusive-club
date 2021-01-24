@@ -10,12 +10,20 @@ block content
           div(class='messages')
             each msg in messages
               div(class='message')
-                p
-                  strong @!{msg.user.username}
-                p 
-                  em= msg.text
-                p 
-                  em= msg.date_formated
+                if currentUser.role === 'Member' || currentUser.role === 'Admin'
+                  p
+                    strong @!{msg.user.username}
+                  p 
+                    em= msg.text
+                  p(class='date')
+                    em= msg.date_formated
+                else
+                  p
+                    a(href='/join') Become a member to view this post author
+                  p 
+                    em= msg.text
+                  p(class='date')
+                    a(href='/join') Become a member to view this post date
     else
         if messages
           div(class='messages')
@@ -25,5 +33,3 @@ block content
                   strong @!{msg.user.username}
                 a(href='/log-in') Log-in or 
                 a(href='/sign-up') Sign-up to view content
-                p 
-                  em= msg.date_formated

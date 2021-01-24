@@ -4,7 +4,8 @@ nav
             h1 
                 a(href='/') Exclusive Club
         if currentUser
-            li
+            li(class='nav-buttons')
+                    a(href='/join') Update Membership
                     a(href='/log-out') Log-out
         else
             li(class='nav-buttons')

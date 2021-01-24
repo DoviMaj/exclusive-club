@@ -17,17 +17,31 @@ body {
 .new-post {
   flex-direction: row;
   align-items: center;
+  justify-content: center;
+  width: -webkit-fill-available;
+  max-width: initial;
+}
+
+select {
+  padding: 10px;
 }
 
 input {
   padding: 8px;
   border-radius: 7px;
+  font-family: "Nunito";
 }
 
 textarea {
   resize: none;
-  padding: 10px 20px;
-  border-radius: 5px;
+  padding: 20px;
+  border-radius: 10px;
+  font-family: "Nunito";
+  width: -webkit-fill-available;
+}
+
+button:focus {
+  outline: none;
 }
 
 button {
@@ -42,12 +56,9 @@ button {
   box-shadow: 4px 4px 0px 0px #3c74a5;
 }
 
-button:active {
-  transform: translate(20deg);
-}
-
-button:focus {
-  outline: none;
+p {
+  padding: 0;
+  margin: 0;
 }
 
 a {
@@ -61,7 +72,7 @@ a:hover {
 }
 
 strong {
-  font-size: 20px;
+  font-size: large;
 }
 
 nav {
@@ -93,6 +104,10 @@ ul {
   width: 40%;
 }
 
+.content h1 {
+  text-align: center;
+}
+
 .messages {
   display: flex;
   flex-direction: column;
@@ -103,9 +118,13 @@ ul {
 .message {
   background: #009fb7;
   border-radius: 10px;
-  padding: 10px;
+  padding: 15px;
 }
 
 .messages > *:nth-child(even) {
   background: #eabd39;
+}
+
+.date {
+  float: right;
 }
