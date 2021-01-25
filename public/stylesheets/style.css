@@ -1,4 +1,11 @@
+html,
 body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
   font: 14px "Nunito", sans-serif;
   margin: 0;
   padding: 0;
@@ -9,9 +16,10 @@ body {
 .form {
   display: flex;
   flex-direction: column;
-  max-width: 400px;
+  width: 400px;
   margin: 20px auto;
   gap: 3px;
+  flex: 1 1 auto;
 }
 
 .new-post {
@@ -53,7 +61,11 @@ button {
   height: fit-content;
   border: none;
   cursor: pointer;
-  box-shadow: 4px 4px 0px 0px #3c74a5;
+  box-shadow: 2px 2px 0px 0px #3c74a5;
+}
+
+button:active {
+  box-shadow: inset 2px 2px 0px 2px #3c74a5;
 }
 
 p {
@@ -102,6 +114,7 @@ ul {
 .content {
   margin: 20px auto;
   width: 40%;
+  flex: 1 0 auto;
 }
 
 .content h1 {
@@ -127,4 +140,15 @@ ul {
 
 .date {
   float: right;
+}
+
+.user-and-delete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+footer {
+  background: rgb(1 1 1 / 35%);
+  flex-shrink: 0;
 }
