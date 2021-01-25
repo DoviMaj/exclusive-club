@@ -1,6 +1,6 @@
 # Exclusive-club project
 
-Project using NodeJS/expressJS, MongoDB/mongoose and passportJS's Local Strategy for auth.
+NodeJS/expressJS, MongoDB/mongoose and passportJS's Local Strategy for auth.
 
 Fun extra feature: answer a random trivia question to become a member. API from https://opentdb.com/
 
