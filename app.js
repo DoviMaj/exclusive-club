@@ -14,8 +14,7 @@ const fetch = require("node-fetch");
 const Schema = mongoose.Schema;
 require("dotenv").config();
 
-const dev_db_url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lo44v.mongodb.net/inventory_app?retryWrites=true&w=majority`;
-const mongoDB = process.env.MONGODB_URI || dev_db_url;
+const mongoDB = process.env.MONGODB_URI;
 mongoose.connect(mongoDB, { useUnifiedTopology: true, useNewUrlParser: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "mongo connection error"));
@@ -109,10 +108,13 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/", async (req, res, next) => {
   try {
     const messages = await Message.find({}).sort({ date: "desc" });
+    if (!messages) {
+      return next("messages not found");
+    }
+    res.render("index", { user: req.user, messages: messages });
   } catch (err) {
     return next(err);
   }
-  res.render("index", { user: req.user, messages: messages });
 });
 
 app.post("/", (req, res, next) => {
