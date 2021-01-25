@@ -11,41 +11,14 @@ const bcrypt = require("bcryptjs");
 const he = require("he");
 const { body, validationResult } = require("express-validator");
 const fetch = require("node-fetch");
-const Schema = mongoose.Schema;
 require("dotenv").config();
+const Message = require("./models/message");
+const User = require("./models/user");
 
 const mongoDB = process.env.MONGODB_URI;
 mongoose.connect(mongoDB, { useUnifiedTopology: true, useNewUrlParser: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "mongo connection error"));
-
-const UserSchema = new Schema({
-  username: { required: true, type: String },
-  email: { required: true, type: String },
-  password: { required: true, type: String },
-  role: { default: "basic", type: String },
-  date: { type: Date, default: Date.now() },
-});
-
-const User = mongoose.model("User", UserSchema);
-
-const MessageSchema = new Schema({
-  date: { default: Date.now(), type: Date },
-  text: { required: true, type: String },
-  user: { required: true, type: Object },
-});
-
-MessageSchema.virtual("date_formated").get(function () {
-  return this.date.toLocaleDateString("en-gb", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minutes: "2-digit",
-  });
-});
-
-const Message = mongoose.model("Message", MessageSchema);
 
 // PassportJS middleware Local Strategy
 passport.use(
