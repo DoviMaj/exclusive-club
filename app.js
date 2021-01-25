@@ -158,8 +158,11 @@ app.post(
     .custom(async (username) => {
       try {
         const existingUsername = await User.findOne({ username: username });
-      } catch (existingUsername) {
-        throw new Error("username already in use");
+        if (existingUsername) {
+          throw new Error("username already in use");
+        }
+      } catch (err) {
+        throw new Error(err);
       }
     }),
   body("email", "Not an Email")
@@ -171,7 +174,7 @@ app.post(
       try {
         const existingEmail = await User.findOne({ email: email });
         if (existingEmail) {
-          return next("Email already in use");
+          throw new Error("Email already in use");
         }
       } catch (err) {
         throw new Error(err);
