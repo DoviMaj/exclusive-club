@@ -138,9 +138,6 @@ app.post(
     failureRedirect: "/log-in",
     successRedirect: "/",
   })
-  // (req, res) => {
-  //   res.redirect("/");
-  // }
 );
 
 app.get("/log-out", (req, res) => {
@@ -245,7 +242,6 @@ app.get("/join", async (req, res, next) => {
       }
     );
     currentQuestion.question = he.decode(currentQuestion.question);
-    console.log(currentQuestion);
 
     // create answers array
     let answersArr = [...currentQuestion.incorrect_answers];
@@ -256,7 +252,7 @@ app.get("/join", async (req, res, next) => {
     const randomIndexValue = answersArr[newRandomNum];
     answersArr[newRandomNum] = currentQuestion.correct_answer;
     answersArr.push(randomIndexValue);
-    console.log(currentQuestion);
+
     // render
     res.render("join", { question: currentQuestion, answersArr, wrongAnswer });
   } catch (err) {
