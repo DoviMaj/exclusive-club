@@ -2,15 +2,18 @@ extends layout
 block content
     
     form(action="" method='POST' class='form')
-        h1 Become Member
+        h1 Become Member 😎
         div 
             h3 Ok, what membership status u want to have?
-            label(for='Admin') Admin
-            input(type="radio" name="role" value="Admin")
-            label(for="Member") Member
-            input(type="radio" name="role" value="Member")
+            
+            div
+                label(for='Admin') Admin - can delete messages!! 😨 
+                input(type="radio" name="role" value="Admin")
+            div
+                label(for="Member") Member - can view posts author and date 
+                input(type="radio" name="role" value="Member")
         if wrongAnswer 
-            h3 Ops, wrong answer... try again?
+            h3 Ops, wrong answer... try again 🤔?
         h3 Answer this question or get a 
             a(onclick='window.location.reload()') new question
         label(for='riddle')= question.question
