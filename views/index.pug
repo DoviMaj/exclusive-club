@@ -10,26 +10,34 @@ block content
           div(class='messages')
             each msg in messages
               div(class='message')
-                if currentUser.role === 'Member' || currentUser.role === 'Admin'
+                if currentUser.role === 'Member' 
                   p
                     strong @!{msg.user.username}
                   p 
                     em= msg.text
                   p(class='date')
                     em= msg.date_formated
-                else
-                  p
-                    a(href='/join') Become a member to view this post author
+                else if  currentUser.role === 'Admin'
+                  div(class='user-and-delete')
+                    p 
+                      strong @!{msg.user.username}
+                    form(action=`/${msg._id}/delete` method='GET')
+                      button Delete
                   p 
                     em= msg.text
                   p(class='date')
-                    a(href='/join') Become a member to view this post date
+                    em= msg.date_formated
+                else
+                  p
+                    a(href='/join') Become a member to view the author
+                  p 
+                    em= msg.text
+                  p(class='date')
+                    a(href='/join') Become a member to view the date
     else
         if messages
           div(class='messages')
             each msg in messages
               div(class='message')
-                p
-                  strong @!{msg.user.username}
                 a(href='/log-in') Log-in or 
                 a(href='/sign-up') Sign-up to view content
