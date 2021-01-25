@@ -14,7 +14,8 @@ const fetch = require("node-fetch");
 const Schema = mongoose.Schema;
 require("dotenv").config();
 
-const mongoDB = process.env.MONGO_URI;
+const dev_db_url = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lo44v.mongodb.net/inventory_app?retryWrites=true&w=majority`;
+const mongoDB = process.env.MONGODB_URI || dev_db_url;
 mongoose.connect(mongoDB, { useUnifiedTopology: true, useNewUrlParser: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "mongo connection error"));
@@ -106,9 +107,10 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.get("/", async (req, res, next) => {
-  const messages = await Message.find({}).sort({ date: "desc" });
-  if (!messages) {
-    return next("messages not found");
+  try {
+    const messages = await Message.find({}).sort({ date: "desc" });
+  } catch (err) {
+    return next(err);
   }
   res.render("index", { user: req.user, messages: messages });
 });
@@ -152,9 +154,10 @@ app.post(
     .trim()
     .escape()
     .custom(async (username) => {
-      const existingUsername = await User.findOne({ username: username });
-      if (existingUsername) {
-        return next("Email already in use");
+      try {
+        const existingUsername = await User.findOne({ username: username });
+      } catch (existingUsername) {
+        throw new Error("username already in use");
       }
     }),
   body("email", "Not an Email")
@@ -163,9 +166,13 @@ app.post(
     .isEmail()
     .withMessage("Invalid email")
     .custom(async (email) => {
-      const existingEmail = await User.findOne({ email: email });
-      if (existingEmail) {
-        return next("Email already in use");
+      try {
+        const existingEmail = await User.findOne({ email: email });
+        if (existingEmail) {
+          return next("Email already in use");
+        }
+      } catch (err) {
+        throw new Error(err);
       }
     }),
   body("password").isLength(6).withMessage("Minimum length 6 characters"),
@@ -274,7 +281,11 @@ app.post("/join", async (req, res, next) => {
 
 // Delete Message route
 app.get("/:id/delete", async (req, res, next) => {
-  await Message.findByIdAndDelete(req.params.id);
+  try {
+    await Message.findByIdAndDelete(req.params.id);
+  } catch (err) {
+    return next(err);
+  }
   res.redirect("/");
 });
 
