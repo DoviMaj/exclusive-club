@@ -8,6 +8,7 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const he = require("he");
 const { body, validationResult } = require("express-validator");
 const fetch = require("node-fetch");
 const Schema = mongoose.Schema;
@@ -104,12 +105,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/", async (req, res) => {
-  console.log(req.session, req.app.locals);
-
+app.get("/", async (req, res, next) => {
   const messages = await Message.find({}).sort({ date: "desc" });
   if (!messages) {
-    throw new Error("messages not found");
+    return next("messages not found");
   }
   res.render("index", { user: req.user, messages: messages });
 });
@@ -133,10 +132,11 @@ app.post(
   "/log-in",
   passport.authenticate("local", {
     failureRedirect: "/log-in",
-  }),
-  (req, res) => {
-    res.redirect("/");
-  }
+    successRedirect: "/",
+  })
+  // (req, res) => {
+  //   res.redirect("/");
+  // }
 );
 
 app.get("/log-out", (req, res) => {
@@ -154,7 +154,7 @@ app.post(
     .custom(async (username) => {
       const existingUsername = await User.findOne({ username: username });
       if (existingUsername) {
-        throw new Error("Email already in use");
+        return next("Email already in use");
       }
     }),
   body("email", "Not an Email")
@@ -165,18 +165,18 @@ app.post(
     .custom(async (email) => {
       const existingEmail = await User.findOne({ email: email });
       if (existingEmail) {
-        throw new Error("Email already in use");
+        return next("Email already in use");
       }
     }),
   body("password").isLength(6).withMessage("Minimum length 6 characters"),
   body("confirm-password").custom((value, { req }) => {
     if (value !== req.body.password) {
-      throw new Error("Password confirmation does not match password");
+      return next("Password confirmation does not match password");
     }
     // Indicates the success of this synchronous custom validator
     return true;
   }),
-  (req, res) => {
+  (req, res, next) => {
     // Finds the validation errors in this request and wraps them in an object with handy functions
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -194,7 +194,7 @@ app.post(
     });
 
     bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
-      if (err) throw new Error(err);
+      if (err) return next(err);
       user.password = hashedPassword;
       user.save((err) => {
         if (err) {
@@ -220,10 +220,20 @@ app.get("/join", async (req, res, next) => {
       "https://opentdb.com/api.php?amount=1&difficulty=hard&type=multiple"
     );
     if (res.status >= 400) {
-      throw new Error("Bad response from server");
+      return next("Bad response from server");
     }
     const question = await quest.json();
     currentQuestion = question.results[0];
+    // decode special characters
+
+    currentQuestion.correct_answer = he.decode(currentQuestion.correct_answer);
+    currentQuestion.incorrect_answers = currentQuestion.incorrect_answers.map(
+      (answer) => {
+        return he.decode(answer);
+      }
+    );
+    currentQuestion.question = he.decode(currentQuestion.question);
+    console.log(currentQuestion);
 
     // create answers array
     let answersArr = [...currentQuestion.incorrect_answers];
@@ -234,16 +244,15 @@ app.get("/join", async (req, res, next) => {
     const randomIndexValue = answersArr[newRandomNum];
     answersArr[newRandomNum] = currentQuestion.correct_answer;
     answersArr.push(randomIndexValue);
-
+    console.log(currentQuestion);
     // render
     res.render("join", { question: currentQuestion, answersArr, wrongAnswer });
   } catch (err) {
-    throw new Error(err);
+    return next(err);
   }
 });
 
 app.post("/join", async (req, res, next) => {
-  console.log(req.session, req.app.locals);
   if (
     req.body.riddle.toLowerCase() ===
     currentQuestion.correct_answer.toLowerCase()
@@ -261,6 +270,12 @@ app.post("/join", async (req, res, next) => {
     wrongAnswer = true;
     res.redirect("/join");
   }
+});
+
+// Delete Message route
+app.get("/:id/delete", async (req, res, next) => {
+  await Message.findByIdAndDelete(req.params.id);
+  res.redirect("/");
 });
 
 // catch 404 and forward to error handler
